@@ -1,20 +1,25 @@
 {
-  "name": "quick-ql",
+  "name": "@quick-ql/qq",
   "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "directories": {
-    "example": "example"
-  },
   "scripts": {
-    "build": "rm -rf dist && tsup src/index.ts --format esm,cjs --legacy-output --dts",
+    "build": "rm -rf dist && npm run build-module && npm run build-cli",
+    "build-module": "tsup src/index.ts --format esm,cjs --legacy-output --dts",
+    "build-cli": "tsup src/cli.ts --format cjs --legacy-output",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "qq": "./dist/cli.js"
   },
   "files": [
     "dist"
   ],
+  "directories": {
+    "example": "example"
+  },
   "keywords": [],
   "author": "Alexis Tyler <xo@wvvw.me>",
   "license": "MIT",
@@ -22,6 +27,7 @@
     "@graphql-toolkit/schema-merging": "^0.10.7",
     "@graphql-tools/merge": "^6.2.4",
     "apollo-server": "^2.18.1",
+    "dataloader": "^2.0.0",
     "graphql-tools": "^6.2.4",
     "graphql-type-json": "^0.3.2",
     "graphql-type-uuid": "^0.2.0",
