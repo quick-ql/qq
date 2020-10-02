@@ -4,19 +4,28 @@ import { GraphQLJSON } from 'graphql-type-json';
 import * as GraphQLUUID from 'graphql-type-uuid';
 import { ApolloServer } from 'apollo-server';
 import { makeExecutableSchema } from 'graphql-tools';
+import { register } from 'ts-node';
 import { mergeTypeDefs, mergeResolvers } from '@graphql-tools/merge';
 import { Export } from './types';
 
 const env = process.env.NODE_ENV || 'development';
 const port = process.env.PORT || 0;
 
+// Load ts-node
+register({
+    transpileOnly: true
+});
+
 const args = process.argv.slice(2);
+const schemasToLoad: string[] = [];
 const schemas = (args.length === 0 ? ['example'] : args).map(directory => {
     try {
         const fullPath = path.resolve(__dirname, '..', directory);
         return fs.readdirSync(fullPath).map(fileName => {
             try {
-                return require(path.join(fullPath, fileName)).default as Export;
+                const schemaPath = path.join(fullPath, fileName);
+                schemasToLoad.push(schemaPath);
+                return require(schemaPath).default as Export;
             } catch {}
         });
     } catch {}
@@ -30,8 +39,14 @@ const typeDefs = [
     // If no schemas return demo query
     // Otherwise return schemas
     ...(schemas.length === 0 ? [`
+        type Error {
+            message: String
+            files: [String]
+        }
+
         type Query {
-            hello: String
+            hello: String!
+            error: Error
         }
     `] : schemas.map(_ => _.schema)),
 ];
@@ -44,7 +59,15 @@ const resolvers = [
     // If no schemas return demo query
     // Otherwise return schemas
     ...(schemas.length === 0 ? [{
-        hello: () => 'world!'
+        Query: {
+            hello: () => 'world!',
+            error: () => {
+                return {
+                    message: `Couldn't load any schema files.`,
+                    files: schemasToLoad
+                };
+            }
+        }
     }] : schemas.map(({ schema: _, ...resolvers }) => ({
         ...resolvers
     })))
