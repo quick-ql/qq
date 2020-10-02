@@ -5,10 +5,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rm -rf dist && npm run build-module && npm run build-cli",
+    "build": "rm -rf dist && npm run build-module && npm run build-cli && npm run build-types",
     "build-module": "tsup src/index.ts --format esm,cjs --legacy-output --dts",
     "build-cli": "tsup src/cli.ts --format cjs --legacy-output",
-    "prepublishOnly": "npm run build",
+    "build-types": "tsup src/types.ts --dts",
+    "prepack": "npm run build",
+    "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
