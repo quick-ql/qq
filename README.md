@@ -2,7 +2,9 @@
 Fast prototyping for graphql
 
 ## Installation
+```bash
 npm i -g github:OmgImAlexis/quick-ql
+```
 
 ## Envs
 ```bash
@@ -14,5 +16,5 @@ PORT=8000
 
 ## Usage
 ```bash
-$ PORT=9000 qq
+$ PORT=9000 qq .
 ```
