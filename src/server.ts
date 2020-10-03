@@ -81,7 +81,11 @@ export const createServer = (schemaDirectories: string[] = []) => {
             fileLogger(filePath).debug('Loaded');
             return schema;
         } catch (error) {
-            fileLogger(filePath).debug('Failed loading', error);
+            if (error.code === 'MODULE_NOT_FOUND') {
+                fileLogger(filePath).info('Failed loading', error.message.split('\n')[0]);
+            } else {
+                fileLogger(filePath).debug('Failed loading', error);
+            }
             schemasToLoad.push(filePath);
         }
     };
@@ -95,7 +99,9 @@ export const createServer = (schemaDirectories: string[] = []) => {
         .map((filePath, index, filePaths) => {
             log.debug(`Loading ${index + 1}/${filePaths.length}`);
             return loadFile(filePath);
-        });
+        })
+        // Remove empty elements
+        .filter(Boolean);
 
     if (schemasToLoad.length !== 0) {
         log.debug(`Loaded ${schemasLoaded.length}/${schemasToLoad.length + schemasLoaded.length} schemas.`);
