@@ -9,8 +9,6 @@ import { mergeTypeDefs, mergeResolvers } from '@graphql-tools/merge';
 import { Export } from './types';
 import { log, debug, introspection, playground } from './utils';
 
-const EXAMPLES_DIRECTORY = path.resolve(__dirname, '../node_modules/@quick-ql/examples/schemas');
-
 const fileLogger = (filePath: string) => {
     const logger = Object.fromEntries(Object.entries(log).map(([logName, logger]) => {
         const customLogger = (message: string, ...args: any[]) => logger(`${filePath.replace(process.cwd(), '.')}: ${message}`, ...args);
@@ -45,7 +43,33 @@ const enableTsNode = () => {
     log.debug('ts-node loaded')
 }
 
-export const createServer = (args = [EXAMPLES_DIRECTORY]) => {
+const getSchemas = (directoryOrFile: string): string[] => {
+    try {
+        // Typescript or Javascript file
+        if (directoryOrFile.endsWith('.ts') || directoryOrFile.endsWith('.js')) {
+            return [directoryOrFile.startsWith('/') ? directoryOrFile : path.join(process.cwd(), directoryOrFile)];
+        }
+
+        // Directory
+        const currentPath = directoryOrFile.startsWith('/') ? directoryOrFile : path.resolve(process.cwd(), directoryOrFile);
+        return fs.readdirSync(currentPath, { withFileTypes: true }).map(({ isDirectory, name }) => {
+            const fullPath = path.join(currentPath, name);
+            if (isDirectory) {
+                if (name.includes('node_modules')) {
+                    return;
+                }
+                return getSchemas(fullPath);
+            }
+            return fullPath;
+        }).flatMap(_ => _).filter(Boolean);
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            fileLogger(error.path).debug('Path does not exist');
+        }
+    }
+};
+
+export const createServer = (schemaDirectories: string[] = []) => {
     const schemasLoaded: string[] = [];
     const schemasToLoad: string[] = [];
     const loadFile = (filePath: string) => {
@@ -61,32 +85,6 @@ export const createServer = (args = [EXAMPLES_DIRECTORY]) => {
             schemasToLoad.push(filePath);
         }
     };
-    const getSchemas = (directoryOrFile: string): string[] => {
-        try {
-            // Typescript or Javascript file
-            if (directoryOrFile.endsWith('.ts') || directoryOrFile.endsWith('.js')) {
-                return [directoryOrFile.startsWith('/') ? directoryOrFile : path.join(process.cwd(), directoryOrFile)];
-            }
-    
-            // Directory
-            const currentPath = directoryOrFile.startsWith('/') ? directoryOrFile : path.resolve(process.cwd(), directoryOrFile);
-            return fs.readdirSync(currentPath, { withFileTypes: true }).map(({ isDirectory, name }) => {
-                const fullPath = path.join(currentPath, name);
-                if (isDirectory) {
-                    if (name.includes('node_modules')) {
-                        return;
-                    }
-                    return getSchemas(fullPath);
-                }
-                return fullPath;
-            }).flatMap(_ => _).filter(Boolean);
-        } catch (error) {
-            if (error.code === 'ENOENT') {
-                fileLogger(error.path).debug('Path does not exist');
-            }
-        }
-    }
-    const schemaDirectories = args.length === 0 ? [EXAMPLES_DIRECTORY] : args;
     const schemas = schemaDirectories
         .map(getSchemas)
         // Flatten array to string[]
@@ -100,9 +98,9 @@ export const createServer = (args = [EXAMPLES_DIRECTORY]) => {
         });
 
     if (schemasToLoad.length !== 0) {
-        log.debug(`Loaded ${schemasLoaded.length}/${schemasToLoad.length + schemasLoaded.length} schemas.`)
+        log.debug(`Loaded ${schemasLoaded.length}/${schemasToLoad.length + schemasLoaded.length} schemas.`);
     }
-    
+
     const typeDefs = [
         `
             scalar JSON
@@ -115,14 +113,14 @@ export const createServer = (args = [EXAMPLES_DIRECTORY]) => {
                 message: String
                 files: [String]
             }
-    
+
             type Query {
                 hello: String!
                 error: Error
             }
         `] : schemas.map(_ => _?.schema)),
     ];
-    
+
     const resolvers = [
         {
             JSON: GraphQLJSON,
@@ -144,17 +142,17 @@ export const createServer = (args = [EXAMPLES_DIRECTORY]) => {
             ...resolvers
         })))
     ];
-    
+
     // Build schema
     const schema = makeExecutableSchema({
         typeDefs: mergeTypeDefs(typeDefs),
         resolvers: mergeResolvers(resolvers)
     });
-    
+
     return new ApolloServer({
         playground,
         introspection,
         debug,
         schema
-    });    
+    });
 };

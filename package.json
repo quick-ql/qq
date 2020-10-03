@@ -25,7 +25,6 @@
   "dependencies": {
     "@graphql-toolkit/schema-merging": "^0.10.7",
     "@graphql-tools/merge": "^6.2.4",
-    "@quick-ql/examples": "github:quick-ql/examples",
     "apollo-server": "^2.18.1",
     "graphql-tools": "^6.2.4",
     "graphql-type-json": "^0.3.2",
