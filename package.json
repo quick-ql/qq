@@ -36,6 +36,12 @@
   "devDependencies": {
     "@types/graphql-type-uuid": "^0.2.3",
     "@types/uuid": "^8.3.0",
+    "cz-conventional-changelog": "^3.3.0",
     "tsup": "^3.7.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
