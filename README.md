@@ -3,7 +3,7 @@ Fast prototyping for graphql
 
 ## Installation
 ```bash
-npm i -g github:OmgImAlexis/quick-ql
+npm i -g github:quick-ql/qq
 ```
 
 ## Envs
