@@ -25,7 +25,7 @@
   "dependencies": {
     "@graphql-toolkit/schema-merging": "^0.10.7",
     "@graphql-tools/merge": "^6.2.4",
-    "apollo-server": "^2.18.1",
+    "apollo-server": "^2.25.3",
     "graphql-tools": "^6.2.4",
     "graphql-type-json": "^0.3.2",
     "graphql-type-uuid": "^0.2.0",
